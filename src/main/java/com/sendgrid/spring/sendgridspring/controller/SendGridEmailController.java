@@ -1,35 +1,29 @@
 package com.sendgrid.spring.sendgridspring.controller;
 
 import com.sendgrid.spring.sendgridspring.api.EmailSendingApi;
-import com.sendgrid.spring.sendgridspring.exceptions.NullDetailException;
-import com.sendgrid.spring.sendgridspring.notifications.model.EmailRequest;
-import com.sendgrid.spring.sendgridspring.notifications.model.EmailResponse;
+import com.sendgrid.spring.sendgridspring.module.EmailModule;
 import com.sendgrid.spring.sendgridspring.service.EmailService;
-import com.sendgrid.spring.sendgridspring.type.EmailTypes;
+import com.sendgrid.spring.sendgridspring.utils.base.EmailBaseResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import java.util.Date;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", maxAge = 3600)
-@Log4j2
 @Slf4j
 public class SendGridEmailController implements EmailSendingApi {
 
-    private final EmailService sendEmailService;
+    private final EmailService emailService;
 
     @Override
-    public ResponseEntity<?> sendPlanJava(EmailRequest emailRequest) throws IOException {
-        log.info("sendPlanJava {} ", emailRequest.getTo());
-        if (emailRequest.getTo() == null) throw new NullDetailException();
-        EmailResponse<?> response = sendEmailService.manageEmail(emailRequest);
-        return new ResponseEntity<>(response.getData(),HttpStatus.valueOf(response.getCode()));
+    public ResponseEntity<EmailBaseResponse<?>> sendEmail(EmailModule emailModule) {
+        boolean isEmailSent = emailService.sendEmailVerificationMessage(emailModule);
+        log.info("Email sent {} ", isEmailSent);
+        EmailBaseResponse<?> response = new EmailBaseResponse<>(new Date(), isEmailSent, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(response, response.getHttpStatus());
     }
 }
